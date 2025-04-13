@@ -1,94 +1,72 @@
 "use client";
-import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
-import { LogOut } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import Image from "next/image";
+import Link from "next/link";
+import React, { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { loginUser, checkAuthState } from "@/app/FirebaseAPI"; // update path as needed
 
-export default function LoginPage() {
+function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [error, setError] = useState("");
   const router = useRouter();
 
   useEffect(() => {
-    const user = localStorage.getItem("user");
-    if (user) {
-      setIsLoggedIn(true);
-    }
+    const unsubscribe = checkAuthState((user) => {
+      if (user) {
+        router.push("/");
+      }
+    });
+
+    return () => unsubscribe();
   }, []);
 
-  const handleLogin = () => {
-    if (email && password) {
-      const user = { email };
-      localStorage.setItem("user", JSON.stringify(user));
-      router.push("/");
+  const handleLogin = async () => {
+    const { user, error } = await loginUser(email, password);
+    if (user) {
+      setError("");
+      router.push("/"); // navigate to homepage
     } else {
-      alert("Please fill in all fields.");
+      setError(error.message);
     }
-  };
-
-  const handleLogout = () => {
-    localStorage.removeItem("user");
-    setIsLoggedIn(false);
   };
 
   return (
-    <div className="pt-10 flex flex-col items-center justify-center min-h-screen bg-green-100 px-4">
-      {isLoggedIn ? (
-        <div className="flex flex-col items-center gap-4">
-          <h2 className="text-2xl font-bold text-green-800 text-center">
-            You're already logged in.
-          </h2>
-          <LogOut
-            onClick={handleLogout}
-            className="cursor-pointer text-red-500 hover:text-red-700"
-          />
-        </div>
-      ) : (
-        <div className="flex w-full shadow-xl rounded-2xl max-w-lg flex-col items-center justify-center p-6 sm:p-10 bg-green-50 border border-gray-200">
-          <Image src="/logo.png" alt="logo" width={170} height={50} />
-          <h2 className="font-bold text-2xl sm:text-3xl mb-6 text-center text-green-900">
-            Login to your account
-          </h2>
-
-          <input
-            placeholder="Your Email"
-            className="w-full p-3 mb-4 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-teal-400"
-            type="email"
-            name="email"
+    <div className="pt-10 flex items-center justify-center">
+      <div className="flex w-full shadow-xl rounded-2xl max-w-xl flex-col items-center justify-center p-10 bg-green-50 border-gray-200">
+        <Image src={"/logo.png"} alt="logo" width={200} height={200} />
+        <h2 className="font-bold text-3xl">Login to your account</h2>
+        <div className="w-full flex flex-col gap-5 mt-7">
+          <Input
+            placeholder="name@example.com"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
           />
-          <input
+          <Input
             placeholder="Password"
-            className="w-full p-3 mb-6 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-teal-400"
             type="password"
-            name="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
           />
-
-          <button
-            onClick={handleLogin}
-            className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded"
-          >
+          <Button className="cursor-pointer" onClick={handleLogin}>
             Login
-          </button>
-          <p className="mt-4 text-sm text-center text-gray-600">
-            Don’t have an account?
-          </p>
-          <button
-            onClick={() => {
-              if (typeof window !== "undefined") {
-                router.push("/create-account");
-              }
-            }}
-            className="w-full mt-3 bg-white border border-green-600 text-green-700 hover:bg-green-100 font-bold py-2 px-4 rounded"
-          >
+          </Button>
+          {error && <p className="text-red-500">{error}</p>}
+          <p>
             Create an Account
-          </button>
+            <Link
+              href={"/create-account"}
+              className="pl-2 text-blue-500 underline"
+            >
+              Click here
+            </Link>
+          </p>
         </div>
-      )}
+      </div>
     </div>
   );
 }
+
+export default Login;

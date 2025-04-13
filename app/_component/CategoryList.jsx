@@ -1,11 +1,12 @@
 "use client";
-import React, { useEffect, useState } from "react";
-import { getCategories } from "../FirebaseAPI";
-import Link from "next/link";
 import Image from "next/image";
+import React, { useEffect, useState } from "react";
+import { getCategories } from "@/app/FirebaseAPI"; // adjust if your path is different
+import Link from "next/link";
 
-function CategoryList({selected}) {
+function CategoryList({title, selected  }) {
   const [categories, setCategories] = useState([]);
+
   useEffect(() => {
     const fetchCategories = async () => {
       const result = await getCategories();
@@ -16,27 +17,22 @@ function CategoryList({selected}) {
 
   return (
     <div className="mt-10">
-      <h2 className="text-green-700 font-bold text-2xl mb-4">Shop by Category</h2>
-      
-      <div className="flex flex-row overflow-x-auto gap-7 no-scrollbar ">
+      <h2 className={`text-green-700 font-bold text-2xl ${title =="hide" ? "hidden": "visible"} `}>Shop by Category</h2>
+      <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-7 gap-5 mt-4">
         {categories.map((category, index) => (
           <Link
-            href={`/category/${category?.name}`}
             key={index}
-            className={`group flex flex-col w-55 h-40  items-center justify-center rounded-xl shadow-md p-20 bg-green-50 hover:bg-green-200 transition-all duration-100 
-              ${selected === category.name ? "bg-green-500" : ""
-            }`}
+            href={"/category/"+category?.name}
+            className={`${selected ==category.name ? "bg-green-500 hover:bg-green-500": ""} flex flex-col items-center bg-green-50 py-8 p-4 rounded-lg gap-2 group cursor-pointer hover:bg-green-300`}
           >
             <Image
               src={category?.imgLink}
               width={50}
               height={50}
               alt={category.name}
-              className="transition-transform duration-100 group-hover:scale-130"
+              className="group-hover:scale-125 transition-all ease-in-out"
             />
-            <h2 className="mt-5 text-xl font-bold text-green-800 text-center">
-              {category?.name}
-            </h2>
+            <h2 className="text-green-800 font-bold">{category.name}</h2>
           </Link>
         ))}
       </div>
